@@ -28,7 +28,7 @@ export default function ForgotPassword() {
     }
 
     return (
-        <div className="min-h-screen flex bg-gray-50 overflow-hidden">
+        <div className="min-h-screen flex bg-gray-50 dark:bg-gray-950 transition-colors duration-300 overflow-hidden">
             {/* Visual Side */}
             <motion.div
                 initial={{ x: -100, opacity: 0 }}
@@ -51,18 +51,18 @@ export default function ForgotPassword() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2, duration: 0.5 }}
-                    className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-gray-200/50 p-8 border border-gray-100"
+                    className="w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none p-8 border border-gray-100 dark:border-gray-800"
                 >
                     <div className="text-center mb-10">
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Forgot Password?</h2>
-                        <p className="text-gray-500">Enter your email to reset your password.</p>
+                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Forgot Password?</h2>
+                        <p className="text-gray-500 dark:text-gray-400">Enter your email to reset your password.</p>
                     </div>
 
                     {error && (
                         <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
-                            className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm font-medium mb-6 flex items-center gap-2 border border-red-100"
+                            className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm font-medium mb-6 flex items-center gap-2 border border-red-100 dark:border-red-900/20"
                         >
                             <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                             {error}
@@ -73,7 +73,7 @@ export default function ForgotPassword() {
                         <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
-                            className="bg-green-50 text-green-600 px-4 py-3 rounded-xl text-sm font-medium mb-6 flex items-center gap-2 border border-green-100"
+                            className="bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 px-4 py-3 rounded-xl text-sm font-medium mb-6 flex items-center gap-2 border border-green-100 dark:border-green-900/20"
                         >
                             <CheckCircle size={16} />
                             {message}
@@ -82,14 +82,14 @@ export default function ForgotPassword() {
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">Email</label>
+                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 ml-1">Email</label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                                 <input
                                     ref={emailRef}
                                     type="email"
                                     required
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-gray-900 dark:text-white"
                                     placeholder="you@example.com"
                                 />
                             </div>
@@ -109,7 +109,7 @@ export default function ForgotPassword() {
                     </form>
 
                     <div className="mt-8 text-center">
-                        <Link to="/login" className="inline-flex items-center gap-2 font-bold text-gray-600 hover:text-gray-900 transition-colors">
+                        <Link to="/login" className="inline-flex items-center gap-2 font-bold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                             <ArrowLeft size={16} /> Back to Login
                         </Link>
                     </div>
