@@ -9,7 +9,7 @@ import { motion } from 'framer-motion';
 
 export default function Chat() {
     const { currentUser } = useAuth();
-    const { setInCall, setCallType } = useCall();
+    const { setInCall, setCallType, setActiveCall } = useCall();
     const location = useLocation();
 
     const [chats, setChats] = useState([]);
@@ -244,7 +244,20 @@ export default function Chat() {
 
     const startCall = (type) => {
         if (!selectedChat) return;
+
+        const otherIndex = 1 - selectedChat.participants.indexOf(currentUser.uid);
+        const targetUid = selectedChat.participants[otherIndex];
+        const targetName = selectedChat.participantNames[otherIndex];
+
         setCallType(type);
+        setActiveCall({
+            chatId: selectedChat.id,
+            callerId: currentUser.uid,
+            callerName: currentUser.displayName || currentUser.email.split('@')[0],
+            calleeId: targetUid,
+            calleeName: targetName,
+            status: "offering"
+        });
         setInCall(true);
     };
 

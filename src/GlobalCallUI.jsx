@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useCall } from './context/CallContext';
 import { Video, Phone, PhoneOff } from "lucide-react";
 import { AnimatePresence, motion } from 'framer-motion';
@@ -8,6 +8,14 @@ import { useAuth } from './context/AuthContext';
 export default function GlobalCallUI() {
     const { currentUser } = useAuth();
     const { incomingCall, activeCall, inCall, callType, acceptCall, declineCall, endCall } = useCall();
+
+    const targetUser = useMemo(() => {
+        if (!activeCall || !currentUser) return null;
+        return {
+            uid: activeCall.callerId === currentUser.uid ? activeCall.calleeId : activeCall.callerId,
+            name: activeCall.callerId === currentUser.uid ? activeCall.calleeName : activeCall.callerName
+        };
+    }, [activeCall, currentUser]);
 
     if (!currentUser) return null;
 
@@ -56,14 +64,11 @@ export default function GlobalCallUI() {
             </AnimatePresence>
 
             {/* Video Call Overlay */}
-            {inCall && activeCall && (
+            {inCall && activeCall && targetUser && (
                 <VideoCall
                     chatId={activeCall.chatId}
                     currentUser={currentUser}
-                    targetUser={{
-                        uid: activeCall.callerId === currentUser.uid ? activeCall.calleeId : activeCall.callerId,
-                        name: activeCall.callerId === currentUser.uid ? activeCall.calleeName : activeCall.callerName
-                    }}
+                    targetUser={targetUser}
                     callType={callType}
                     onClose={endCall}
                 />

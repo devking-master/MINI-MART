@@ -27,6 +27,7 @@ export default function VideoCall({ chatId, currentUser, targetUser, callType = 
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoOff, setIsVideoOff] = useState(callType === 'audio');
     const [isCaller, setIsCaller] = useState(false);
+    const [hasRemoteStream, setHasRemoteStream] = useState(false);
 
     const localVideoRef = useRef();
     const remoteVideoRef = useRef();
@@ -34,6 +35,7 @@ export default function VideoCall({ chatId, currentUser, targetUser, callType = 
     // Refs for state that needs to be accessed in async callbacks/cleanup without stale closures
     const pcRef = useRef(null);
     const localStreamRef = useRef(null);
+    const remoteStreamRef = useRef(null);
     const candidateQueue = useRef([]); // Queue for ICE candidates
 
     useEffect(() => {
@@ -44,7 +46,6 @@ export default function VideoCall({ chatId, currentUser, targetUser, callType = 
         const startCall = async () => {
             const pc = new RTCPeerConnection(servers);
             pcRef.current = pc;
-            setPc(pc);
 
             // Get Local Stream
             const constraints = {
@@ -60,7 +61,6 @@ export default function VideoCall({ chatId, currentUser, targetUser, callType = 
                 }
 
                 localStreamRef.current = stream;
-                setLocalStream(stream);
 
                 if (localVideoRef.current && callType === 'video') {
                     localVideoRef.current.srcObject = stream;
@@ -78,12 +78,18 @@ export default function VideoCall({ chatId, currentUser, targetUser, callType = 
 
             // Handle Remote Stream
             pc.ontrack = (event) => {
-                const stream = event.streams[0] || new MediaStream();
-                if (!event.streams[0]) stream.addTrack(event.track);
-
-                setRemoteStream(stream);
-                if (remoteVideoRef.current) {
-                    remoteVideoRef.current.srcObject = stream;
+                console.log("Remote track received:", event.track.kind);
+                if (remoteStreamRef.current) {
+                    // Already have a stream, just add the new track
+                    remoteStreamRef.current.addTrack(event.track);
+                } else {
+                    // Create new stream with the first track
+                    const stream = event.streams[0] || new MediaStream([event.track]);
+                    remoteStreamRef.current = stream;
+                    if (remoteVideoRef.current) {
+                        remoteVideoRef.current.srcObject = stream;
+                    }
+                    setHasRemoteStream(true);
                 }
             };
 
@@ -94,7 +100,7 @@ export default function VideoCall({ chatId, currentUser, targetUser, callType = 
             const callDocSnapshot = await getDoc(callDocRef);
             if (canceled) return;
 
-            if (!callDocSnapshot.exists()) {
+            if (!callDocSnapshot.exists() || callDocSnapshot.data().callerId === currentUser.uid) {
                 // --- CALLER LOGIC ---
                 setIsCaller(true);
                 setStatus("calling");
@@ -216,7 +222,7 @@ export default function VideoCall({ chatId, currentUser, targetUser, callType = 
             if (unsubscribeDoc) unsubscribeDoc();
             if (unsubscribeCandidates) unsubscribeCandidates();
         }
-    }, [chatId, callType, currentUser, targetUser, onClose]);
+    }, [chatId, callType, currentUser.uid, currentUser.displayName, currentUser.email, targetUser.uid, targetUser.name, onClose]);
 
     const toggleMute = () => {
         if (localStreamRef.current) {
@@ -270,22 +276,39 @@ export default function VideoCall({ chatId, currentUser, targetUser, callType = 
                     ref={remoteVideoRef}
                     autoPlay
                     playsInline
-                    className={`w-full h-full object-cover transition-opacity duration-500 ${(status === 'connected' || status === 'connecting') ? 'opacity-100' : 'opacity-0'}`}
+                    className={`w-full h-full object-cover transition-opacity duration-1000 ${(hasRemoteStream && callType === 'video') ? 'opacity-100' : 'opacity-0'}`}
                 />
 
-                {status !== 'connected' && (
+                {(!hasRemoteStream || callType === 'audio') && (
                     <div className="absolute inset-0 bg-gray-900 flex flex-col items-center justify-center">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 to-purple-900/40 animate-pulse" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/40 to-purple-900/40" />
+
+                        {/* Status ring for audio calls */}
+                        {hasRemoteStream && callType === 'audio' && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-64 h-64 rounded-full border border-blue-500/30 animate-[ping_3s_ease-out_infinite]" />
+                                <div className="w-80 h-80 rounded-full border border-blue-500/20 animate-[ping_4s_ease-out_infinite]" />
+                            </div>
+                        )}
+
                         <div className="relative z-10 mb-8">
                             <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white/10 shadow-2xl bg-gray-800 flex items-center justify-center text-4xl font-bold">
                                 {targetUser.name?.[0]?.toUpperCase()}
+                                {remoteStreamRef.current && (
+                                    <div className="absolute inset-0 bg-blue-500/10 animate-pulse" />
+                                )}
                             </div>
-                            <div className="absolute inset-0 -z-10 rounded-full border border-white/20 scale-125 animate-[ping_2s_ease-out_infinite]" />
+                            {!hasRemoteStream && (
+                                <div className="absolute inset-0 -z-10 rounded-full border border-white/20 scale-125 animate-[ping_2s_ease-out_infinite]" />
+                            )}
                         </div>
                         <div className="relative z-10 text-center space-y-2">
                             <h2 className="text-3xl font-bold">{targetUser.name}</h2>
-                            <p className="text-lg text-blue-200 font-medium animate-pulse">
-                                {status === 'calling' ? 'Calling...' : status === 'initializing' ? 'Initializing...' : 'Connecting...'}
+                            <p className="text-lg text-blue-200 font-medium">
+                                {!hasRemoteStream ?
+                                    (status === 'calling' ? 'Calling...' : 'Connecting...') :
+                                    (callType === 'audio' ? 'Voice Call Connected' : 'Video Connecting...')
+                                }
                             </p>
                         </div>
                     </div>
