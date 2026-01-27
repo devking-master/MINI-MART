@@ -48,12 +48,18 @@ export const CallProvider = ({ children }) => {
             if (document.visibilityState === 'hidden' && Notification.permission === 'granted') {
                 new Notification("Incoming Call", {
                     body: `Call from ${data.callerName || 'Someone'}`,
-                    tag: 'incoming-call'
+                    tag: 'incoming-call',
+                    icon: '/vite.svg' // Optional: Add an icon if available
                 });
             }
         }, (error) => {
             console.error("Global Call Listener Error:", error);
         });
+
+        // Request notification permission on mount
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
 
         return unsubscribe;
     }, [currentUser]);
