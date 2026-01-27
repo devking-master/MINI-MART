@@ -70,6 +70,7 @@ export default function GlobalCallUI() {
                     currentUser={currentUser}
                     targetUser={targetUser}
                     callType={callType}
+                    isCaller={activeCall.callerId === currentUser.uid}
                     onClose={endCall}
                 />
             )}

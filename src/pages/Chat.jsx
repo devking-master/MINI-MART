@@ -209,8 +209,8 @@ export default function Chat() {
     };
 
     return (
-        <div className="max-w-[1400px] mx-auto pt-24 pb-8 px-6 overflow-hidden">
-            <div className="flex h-[calc(100vh-140px)] bg-white dark:bg-gray-950 rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800 transition-all duration-500">
+        <div className="max-w-[1400px] mx-auto pt-20 md:pt-24 pb-4 md:pb-8 px-4 md:px-6 overflow-hidden">
+            <div className="flex h-[calc(100dvh-110px)] md:h-[calc(100vh-140px)] bg-white dark:bg-gray-950 rounded-2xl md:rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800 transition-all duration-500">
                 {/* Sidebar List */}
                 <div className={`w-full md:w-80 border-r border-gray-100 dark:border-gray-800 flex flex-col bg-gray-50/30 dark:bg-gray-900/10 ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                     <div className="p-6 border-b border-gray-100 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md">
@@ -242,8 +242,13 @@ export default function Chat() {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="flex-1 min-w-0 font-bold text-sm truncate">
-                                            {getOtherName(chat)}
+                                        <div className="flex-1 min-w-0 font-bold text-sm truncate flex justify-between items-center">
+                                            <span>{getOtherName(chat)}</span>
+                                            {chat.unreadCounts?.[currentUser.uid] > 0 && (
+                                                <span className="bg-red-500 text-white text-[10px] px-1.5 h-5 min-w-[20px] rounded-full flex items-center justify-center ml-2">
+                                                    {chat.unreadCounts[currentUser.uid]}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     <p className={`text-[11px] truncate opacity-70 ${selectedChat?.id === chat.id ? 'text-blue-50' : 'text-gray-500'}`}>

@@ -11,11 +11,11 @@ const iceServers = [
     { urls: 'stun:stun2.l.google.com:19302' },
 ];
 
-export default function VideoCall({ chatId, currentUser, targetUser, callType = 'video', onClose }) {
+export default function VideoCall({ chatId, currentUser, targetUser, callType = 'video', isCaller: amInitiatorProp, onClose }) {
     const [status, setStatus] = useState("initializing"); // initializing, calling, connected
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoOff, setIsVideoOff] = useState(callType === 'audio');
-    const [isCaller, setIsCaller] = useState(false);
+    const [isCaller, setIsCaller] = useState(amInitiatorProp);
     const [hasRemoteStream, setHasRemoteStream] = useState(false);
 
     const localVideoRef = useRef();
@@ -46,13 +46,12 @@ export default function VideoCall({ chatId, currentUser, targetUser, callType = 
                 if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
                 const callDocRef = doc(db, "chats", chatId, "calls", "active_call");
-                const callSnap = await getDoc(callDocRef);
-
                 const callerSignals = collection(callDocRef, "callerSignals");
                 const calleeSignals = collection(callDocRef, "calleeSignals");
 
-                const amInitiator = !callSnap.exists() || callSnap.data().callerId === currentUser.uid;
-                setIsCaller(amInitiator);
+                // Use the prop to determine if we are the initiator
+                // This avoids async race conditions with getDoc
+                const amInitiator = amInitiatorProp;
 
                 const peer = new Peer({
                     initiator: amInitiator,
@@ -80,7 +79,11 @@ export default function VideoCall({ chatId, currentUser, targetUser, callType = 
                     setStatus("connected");
                 });
 
-                peer.on('error', err => console.error("Peer error:", err));
+                peer.on('error', err => {
+                    console.error("Peer error:", err);
+                    // Don't close immediately on non-fatal errors, but for SDP mismatch we might have to
+                });
+
                 peer.on('close', () => onClose());
 
                 if (amInitiator) {
@@ -138,7 +141,7 @@ export default function VideoCall({ chatId, currentUser, targetUser, callType = 
             if (unsubCall) unsubCall();
             if (unsubSignals) unsubSignals();
         };
-    }, [chatId, currentUser.uid, currentUser.displayName, currentUser.email, targetUser.uid, targetUser.name, callType, onClose]);
+    }, [chatId, currentUser.uid, currentUser.displayName, currentUser.email, targetUser.uid, targetUser.name, callType, onClose, amInitiatorProp]);
 
     const toggleMute = () => {
         if (localStreamRef.current) {
