@@ -262,6 +262,19 @@ export default function ListingDetail() {
                                 </div>
                             </div>
 
+                            {/* Defects/Condition Section */}
+                            {listing.defects && (
+                                <div className="p-5 bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-900/20 space-y-2">
+                                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                                        <AlertCircle size={18} />
+                                        <h4 className="text-[10px] font-black uppercase tracking-widest">Reported Defects</h4>
+                                    </div>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300 leading-relaxed italic">
+                                        "{listing.defects}"
+                                    </p>
+                                </div>
+                            )}
+
                             {/* Seller Action Point */}
                             <div className="pt-6 border-t border-gray-50 dark:border-gray-800">
                                 <div className="flex items-center gap-4 mb-6">

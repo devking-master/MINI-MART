@@ -8,7 +8,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap, LayersControl, C
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { motion } from 'framer-motion';
-import { DollarSign, Tag, Image as ImageIcon, MapPin, AlignLeft, Type, Loader, Crosshair, ArrowRight, UploadCloud } from 'lucide-react';
+import { DollarSign, Tag, Image as ImageIcon, MapPin, AlignLeft, Type, Loader, Crosshair, ArrowRight, UploadCloud, AlertCircle } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 
 // Fix Leaflet marker icon issue
@@ -47,6 +47,7 @@ export default function CreateListing() {
     const [formData, setFormData] = useState({
         title: "",
         description: "",
+        defects: "",
         price: "",
         category: "General",
     });
@@ -272,6 +273,21 @@ export default function CreateListing() {
                                                 className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-black/40 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium text-gray-900 dark:text-white resize-none placeholder:font-normal placeholder:text-gray-400"
                                                 placeholder="Tell buyers what makes your item special..."
                                                 value={formData.description}
+                                                onChange={handleChange}
+                                            ></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div className="relative group">
+                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Item Condition & Defects (Optional)</label>
+                                        <div className="relative">
+                                            <AlertCircle className="absolute left-4 top-4 text-gray-400 group-focus-within:text-amber-500 transition-colors" size={20} />
+                                            <textarea
+                                                name="defects"
+                                                rows="3"
+                                                className="w-full pl-12 pr-4 py-4 bg-amber-50/5 dark:bg-amber-900/5 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all font-medium text-gray-900 dark:text-white resize-none placeholder:font-normal placeholder:text-gray-400"
+                                                placeholder="List any scratches, broken parts, or issues here to inform buyers..."
+                                                value={formData.defects}
                                                 onChange={handleChange}
                                             ></textarea>
                                         </div>
