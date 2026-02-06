@@ -24,6 +24,7 @@ import Refunds from "./pages/Refunds";
 
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
 
 function PrivateRoute({ children }) {
   const { currentUser } = useAuth();
@@ -39,13 +40,10 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
-      <ThemeProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <ThemeProvider>
           <div className="min-h-screen transition-colors duration-300">
-
-
             <Routes>
-
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -87,11 +85,14 @@ function App() {
                   <Chat />
                 </PrivateRoute>
               } />
+              <Route path="/admin" element={
+                <Admin />
+              } />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
-        </AuthProvider>
-      </ThemeProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </Router>
 
   );

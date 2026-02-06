@@ -1,13 +1,24 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useAuth } from './AuthContext';
+import { db } from '../firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-    const [theme, setTheme] = useState(() => {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) return savedTheme;
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    });
+    const { currentUser } = useAuth();
+    const [theme, setTheme] = useState('light');
+
+    // Load initial theme and sync with Firestore
+    useEffect(() => {
+        if (currentUser?.theme) {
+            setTheme(currentUser.theme);
+        } else {
+            // Default to system preference
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            setTheme(systemTheme);
+        }
+    }, [currentUser?.theme]);
 
     useEffect(() => {
         const root = window.document.documentElement;
@@ -18,12 +29,23 @@ export function ThemeProvider({ children }) {
             root.classList.remove('dark');
             document.body.classList.remove('dark');
         }
-        localStorage.setItem('theme', theme);
     }, [theme]);
 
 
-    const toggleTheme = () => {
-        setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    const toggleTheme = async () => {
+        const newTheme = theme === 'light' ? 'dark' : 'light';
+        setTheme(newTheme);
+
+        // Persist to Firestore if user is logged in
+        if (currentUser?.uid) {
+            try {
+                await updateDoc(doc(db, "users", currentUser.uid), {
+                    theme: newTheme
+                });
+            } catch (error) {
+                console.error("Error saving theme preference:", error);
+            }
+        }
     };
 
     return (

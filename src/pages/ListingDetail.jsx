@@ -7,8 +7,11 @@ import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { AnimatePresence, motion } from 'framer-motion';
-import { MessageCircle, Trash2, ArrowLeft, MapPin, Calendar, ChevronLeft, ChevronRight, Share2, ShieldCheck, Zap } from 'lucide-react';
+import { MessageCircle, Trash2, ArrowLeft, MapPin, Calendar, ChevronLeft, ChevronRight, Share2, ShieldCheck, Zap, BadgeCheck, Flame, AlertCircle } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import { DirectionAwareHover } from '../components/animations/DirectionAwareHover';
+import { HoverBorderGradient } from '../components/animations/HoverBorderGradient';
+import { MultiStepLoader } from '../components/animations/Loader';
 
 // Fix Leaflet marker icon issue
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -98,14 +101,16 @@ export default function ListingDetail() {
         setCurrentImageIndex((prev) => (prev - 1 + listing.images.length) % listing.images.length);
     };
 
+    const loadingStates = [
+        { text: "Locating listing..." },
+        { text: "Fetching details..." },
+        { text: "Loading gallery..." },
+        { text: "Verifying seller..." },
+        { text: "Ready!" },
+    ];
+
     if (loading) return (
-        <div className="min-h-screen flex items-center justify-center">
-            <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"
-            />
-        </div>
+        <MultiStepLoader loadingStates={loadingStates} loading={loading} duration={1000} />
     );
 
     if (!listing) return (
@@ -124,7 +129,25 @@ export default function ListingDetail() {
                         <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-gray-400 hover:text-blue-600 transition-all font-bold text-[10px] uppercase tracking-widest mb-2 group text-left">
                             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back to Browse
                         </button>
-                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight leading-tight">{listing.title}</h1>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white tracking-tight leading-tight">{listing.title}</h1>
+                            <div className="flex flex-wrap items-center gap-2">
+                                {listing.isFeatured && (!listing.featuredExpiry || listing.featuredExpiry.toDate() > new Date()) && (
+                                    <div className="relative group/feat">
+                                        <span className="relative bg-black/60 backdrop-blur-xl text-[9px] font-black text-white uppercase tracking-widest px-3 py-2 rounded-xl border border-white/20 shadow-xl group-hover/feat:scale-105 transition-transform flex items-center gap-1.5">
+                                            <ShieldCheck size={14} className="text-blue-400 fill-blue-400/10" /> Featured
+                                        </span>
+                                    </div>
+                                )}
+                                {listing.isUrgent && (!listing.urgentExpiry || listing.urgentExpiry.toDate() > new Date()) && (
+                                    <div className="relative group/urg">
+                                        <span className="relative bg-red-600/90 backdrop-blur-xl text-[9px] font-black text-white uppercase tracking-widest px-3 py-2 rounded-xl border border-white/20 shadow-xl animate-pulse group-hover/urg:scale-105 transition-transform flex items-center gap-1.5">
+                                            <Zap size={14} className="fill-white" /> Urgent Deal
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                         <div className="flex flex-wrap items-center gap-3 text-gray-500 dark:text-gray-400 font-medium text-xs">
                             <span className="flex items-center gap-1.5"><MapPin size={14} className="text-blue-500" /> {listing.address || 'Regional'}</span>
                             <span className="w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -142,78 +165,114 @@ export default function ListingDetail() {
                 </div>
             </div>
 
+            {/* Main Content Grid */}
             <div className="max-w-[1200px] mx-auto px-6 md:px-12 mt-8">
-                <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 xl:gap-12">
-                    {/* Left Side: Visuals */}
-                    <div className="space-y-6">
-                        {/* Main Image View */}
-                        <div className="relative group">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="rounded-3xl overflow-hidden bg-gray-50 dark:bg-gray-800/10 border border-gray-100 dark:border-gray-800 shadow-xl relative aspect-[16/10]"
-                            >
-                                <AnimatePresence mode='wait'>
-                                    <motion.img
-                                        key={currentImageIndex}
-                                        src={listing.images[currentImageIndex]}
-                                        alt={listing.title}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.4 }}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </AnimatePresence>
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10 xl:gap-16">
+                    {/* Left Column: Premium Gallery & Specs */}
+                    <div className="space-y-12">
+                        {/* BENTO GRID GALLERY */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-[200px]">
+                            {/* Primary Image - Large Slot */}
+                            <div className="md:col-span-4 md:row-span-2 relative group rounded-[2.5rem] overflow-hidden bg-gray-50 dark:bg-gray-800/10 border border-gray-100 dark:border-white/5">
+                                <DirectionAwareHover
+                                    imageUrl={listing.images[currentImageIndex]}
+                                    className="w-full h-full"
+                                    imageClassName="object-contain"
+                                >
+                                    <div className="space-y-2 pointer-events-auto">
+                                        <div className="bg-white/90 dark:bg-black/80 backdrop-blur-md text-[10px] font-black uppercase px-4 py-1.5 rounded-xl shadow-md dark:text-white border border-white/10 w-fit">
+                                            {listing.category}
+                                        </div>
+                                        <p className="font-extrabold text-2xl tracking-tight">{listing.title}</p>
+                                    </div>
 
-                                {/* Gallery Navigation */}
-                                {listing.images.length > 1 && (
-                                    <>
-                                        <div className="absolute inset-y-0 left-0 flex items-center pl-4">
-                                            <button onClick={prevImage} className="w-10 h-10 bg-white/20 backdrop-blur-xl border border-white/20 rounded-xl flex items-center justify-center text-white hover:bg-white hover:text-black transition-all shadow-xl group/btn opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                    {/* Navigation Arrows embedded in Hover Content */}
+                                    {listing.images.length > 1 && (
+                                        <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 flex items-center justify-between pointer-events-none">
+                                            <button onClick={(e) => { e.stopPropagation(); prevImage(); }} className="w-12 h-12 pointer-events-auto bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-white hover:text-black transition-all shadow-2xl">
                                                 <ChevronLeft size={24} />
                                             </button>
-                                        </div>
-                                        <div className="absolute inset-y-0 right-0 flex items-center pr-4">
-                                            <button onClick={nextImage} className="w-10 h-10 bg-white/20 backdrop-blur-xl border border-white/20 rounded-xl flex items-center justify-center text-white hover:bg-white hover:text-black transition-all shadow-xl group/btn opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                            <button onClick={(e) => { e.stopPropagation(); nextImage(); }} className="w-12 h-12 pointer-events-auto bg-black/20 backdrop-blur-2xl border border-white/10 rounded-2xl flex items-center justify-center text-white hover:bg-white hover:text-black transition-all shadow-2xl">
                                                 <ChevronRight size={24} />
                                             </button>
                                         </div>
-                                    </>
-                                )}
+                                    )}
+                                </DirectionAwareHover>
+                            </div>
 
-                                <div className="absolute top-6 left-6">
-                                    <span className="bg-white/90 dark:bg-black/80 backdrop-blur-md text-[10px] font-bold tracking-wider uppercase px-4 py-1.5 rounded-xl shadow-md dark:text-white border border-white/10">
-                                        {listing.category}
-                                    </span>
+                            {/* Secondary Slot 1 */}
+                            {listing.images[1] && (
+                                <div
+                                    onClick={() => setCurrentImageIndex(1)}
+                                    className="md:col-span-2 md:row-span-1 cursor-pointer rounded-3xl overflow-hidden border border-white/5 group hover:border-blue-500/30 transition-all"
+                                >
+                                    <img
+                                        src={listing.images[1]}
+                                        alt=""
+                                        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ${currentImageIndex === 1 ? 'opacity-40 animate-pulse' : 'opacity-100'}`}
+                                    />
                                 </div>
-                            </motion.div>
+                            )}
+
+                            {/* Secondary Slot 2 */}
+                            {listing.images[2] && (
+                                <div
+                                    onClick={() => setCurrentImageIndex(2)}
+                                    className="md:col-span-1 md:row-span-1 cursor-pointer rounded-3xl overflow-hidden border border-white/5 group hover:border-blue-500/30 transition-all"
+                                >
+                                    <img
+                                        src={listing.images[2]}
+                                        alt=""
+                                        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ${currentImageIndex === 2 ? 'opacity-40 animate-pulse' : 'opacity-100'}`}
+                                    />
+                                </div>
+                            )}
+
+                            {/* More Photos Slot */}
+                            {listing.images.length > 3 && (
+                                <div
+                                    onClick={() => setCurrentImageIndex(3)}
+                                    className="md:col-span-1 md:row-span-1 cursor-pointer rounded-3xl overflow-hidden border border-white/5 group relative hover:border-blue-500/30 transition-all bg-gray-950"
+                                >
+                                    <img
+                                        src={listing.images[3]}
+                                        alt=""
+                                        className={`w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700 ${currentImageIndex === 3 ? 'opacity-20 animate-pulse' : ''}`}
+                                    />
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-1">
+                                        <span className="text-xl font-black">+{listing.images.length - 3}</span>
+                                        <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-60">Photos</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Thumbnails Grid */}
-                        {listing.images.length > 1 && (
-                            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                                {listing.images.map((img, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => setCurrentImageIndex(idx)}
-                                        className={`flex-shrink-0 w-20 aspect-square rounded-2xl overflow-hidden border-2 transition-all ${idx === currentImageIndex
-                                            ? "border-blue-600 shadow-lg scale-95"
-                                            : "border-transparent opacity-60 hover:opacity-100"
-                                            }`}
-                                    >
-                                        <img src={img} alt="" className="w-full h-full object-cover" />
-                                    </button>
-                                ))}
+                        {/* DESCRIPTIVE SPECIFICATIONS */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-8 border-y border-gray-100 dark:border-white/5">
+                            <div className="space-y-1">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Category</span>
+                                <p className="text-sm font-bold dark:text-gray-300">{listing.category}</p>
                             </div>
-                        )}
+                            <div className="space-y-1">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Condition</span>
+                                <p className="text-sm font-bold dark:text-gray-300 capitalize">{listing.defects ? 'Pre-owned' : 'Mint'}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Listed On</span>
+                                <p className="text-sm font-bold dark:text-gray-300">{listing.createdAt ? new Date(listing.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                            <div className="space-y-1">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Listing ID</span>
+                                <p className="text-sm font-bold font-mono dark:text-gray-300">#{listing.id.slice(-8).toUpperCase()}</p>
+                            </div>
+                        </div>
 
                         {/* Large Map Showcase */}
                         <div className="space-y-4 pt-4">
                             <h3 className="text-xl font-bold tracking-tight dark:text-white flex items-center gap-2">
                                 <MapPin size={20} className="text-blue-500" /> Meeting Point
                             </h3>
-                            <div className="h-[300px] bg-white dark:bg-gray-900/50 p-1 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-lg relative overflow-hidden group">
+                            <div className="h-[200px] md:h-[300px] bg-white dark:bg-gray-900/50 p-1 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-lg relative overflow-hidden group">
                                 {listing.location ? (
                                     <MapContainer
                                         center={[listing.location.lat, listing.location.lng]}
@@ -241,15 +300,22 @@ export default function ListingDetail() {
                     <div className="space-y-6">
                         {/* Highlights */}
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-800/20 space-y-1">
-                                <ShieldCheck size={20} className="text-blue-600 dark:text-blue-400" />
+                            <div className={`p-4 rounded-2xl border space-y-1 transition-all ${listing.isVerified ? 'bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800/20' : 'bg-gray-50 dark:bg-gray-800/10 border-gray-100 dark:border-gray-800/20 opacity-60'}`}>
+                                <ShieldCheck size={20} className={listing.isVerified ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'} />
                                 <h4 className="font-bold text-xs dark:text-white leading-none">Safe Seller</h4>
-                                <p className="text-[10px] text-blue-800/60 font-bold uppercase tracking-wider">Verified</p>
+                                <p className={`text-[10px] font-bold uppercase tracking-wider ${listing.isVerified ? 'text-blue-800/60' : 'text-gray-400'}`}>
+                                    {listing.isVerified ? 'Verified' : 'Standard'}
+                                </p>
                             </div>
-                            <div className="p-4 bg-green-50 dark:bg-green-900/10 rounded-2xl border border-green-100 dark:border-green-800/20 space-y-1">
-                                <Zap size={20} className="text-green-600 dark:text-green-400" />
-                                <h4 className="font-bold text-xs dark:text-white leading-none">Fast Reply</h4>
-                                <p className="text-[10px] text-green-800/60 font-bold uppercase tracking-wider">Responsive</p>
+                            <div className={`p-4 rounded-2xl border space-y-1 transition-all ${(listing.isFeatured && (!listing.featuredExpiry || listing.featuredExpiry.toDate() > new Date())) ||
+                                (listing.isUrgent && (!listing.urgentExpiry || listing.urgentExpiry.toDate() > new Date()))
+                                ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/20 shadow-lg shadow-amber-500/5'
+                                : 'bg-gray-50 dark:bg-gray-800/10 border-gray-100 dark:border-gray-800/20'}`}>
+                                <Flame size={20} className={(listing.isFeatured || listing.isUrgent) ? 'text-amber-600 dark:text-amber-500 fill-current' : 'text-gray-400'} />
+                                <h4 className="font-bold text-xs dark:text-white leading-none">Listing Rank</h4>
+                                <p className={`text-[10px] font-bold uppercase tracking-wider ${(listing.isFeatured || listing.isUrgent) ? 'text-amber-800/60' : 'text-gray-400'}`}>
+                                    {listing.isUrgent ? 'Urgent' : (listing.isFeatured ? 'Boosted' : 'Normal')}
+                                </p>
                             </div>
                         </div>
 
@@ -288,28 +354,39 @@ export default function ListingDetail() {
                                         )}
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-xs font-bold text-gray-900 dark:text-white leading-none truncate">{listing.userDisplayName || listing.userEmail?.split('@')[0]}</p>
-                                        <p className="text-[10px] font-bold text-blue-500 mt-1 uppercase tracking-wider">Active today</p>
+                                        <div className="flex items-center gap-1.5 leading-none mb-1">
+                                            <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                                                {listing.userDisplayName || listing.userEmail?.split('@')[0]}
+                                            </p>
+                                            {listing.isVerified && (
+                                                <BadgeCheck size={16} className="text-blue-500 fill-blue-500/10 shrink-0" title="Verified Seller" />
+                                            )}
+                                        </div>
+                                        <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Active today</p>
                                     </div>
                                 </div>
 
                                 <div className="flex flex-col gap-3">
                                     {currentUser?.uid !== listing.userId ? (
-                                        <button
+                                        <HoverBorderGradient
+                                            as="button"
+                                            containerClassName="rounded-2xl w-full"
+                                            className="dark:bg-blue-600 bg-blue-600 w-full flex items-center justify-center gap-2 font-bold py-4"
                                             onClick={handleStartChat}
-                                            className="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-500 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 active:scale-95 text-base"
                                         >
                                             <MessageCircle size={20} />
                                             Send a message
-                                        </button>
+                                        </HoverBorderGradient>
                                     ) : (
-                                        <button
+                                        <HoverBorderGradient
+                                            as="button"
+                                            containerClassName="rounded-2xl w-full"
+                                            className="dark:bg-red-600 bg-red-600 w-full flex items-center justify-center gap-2 font-bold py-4"
                                             onClick={() => setShowDeleteModal(true)}
-                                            className="w-full bg-red-50 dark:bg-red-900/10 text-red-600 font-bold py-4 rounded-2xl hover:bg-red-100 dark:hover:bg-red-900/20 transition-all flex items-center justify-center gap-2 text-sm"
                                         >
                                             <Trash2 size={16} />
                                             Remove Listing
-                                        </button>
+                                        </HoverBorderGradient>
                                     )}
                                     <p className="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest pt-1">Safety first. Meet in public.</p>
                                 </div>
@@ -317,6 +394,24 @@ export default function ListingDetail() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* STICKY MOBILE ACTION BAR */}
+            <div className="md:hidden fixed bottom-6 left-6 right-6 z-50">
+                <AnimatePresence>
+                    {!loading && listing && currentUser?.uid !== listing.userId && (
+                        <motion.button
+                            initial={{ y: 100, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 100, opacity: 0 }}
+                            onClick={handleStartChat}
+                            className="bg-blue-600 text-white font-black py-4.5 rounded-[1.5rem] shadow-[0_20px_40px_rgba(37,99,235,0.4)] flex items-center justify-center gap-3 w-full border border-white/20 active:scale-95 transition-all text-sm uppercase tracking-widest"
+                        >
+                            <MessageCircle size={20} />
+                            Send Message
+                        </motion.button>
+                    )}
+                </AnimatePresence>
             </div>
 
             <ConfirmModal

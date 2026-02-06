@@ -12,11 +12,32 @@ export default function Sellers() {
     useEffect(() => {
         const fetchSellers = async () => {
             try {
-                // In a real app, we would query for "featured" or highly rated users
-                // For now, we'll just fetch some users to demonstrate
-                const q = query(collection(db, "users"), limit(12));
-                const snapshot = await getDocs(q);
-                const fetched = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // 1. Fetch all users
+                const usersSnap = await getDocs(collection(db, "users"));
+                const listingsSnap = await getDocs(collection(db, "listings"));
+
+                const allListings = listingsSnap.docs.map(doc => doc.data());
+
+                const fetched = usersSnap.docs.map(doc => {
+                    const userData = doc.data();
+                    // Count items for this user
+                    const itemCount = allListings.filter(l => l.userId === doc.id).length;
+
+                    return {
+                        id: doc.id,
+                        ...userData,
+                        itemCount: itemCount
+                    };
+                })
+                    // Hide users with 0 listings unless they are verified
+                    .filter(u => u.isVerified || u.itemCount > 0)
+                    // Sort verified to top, then by item count
+                    .sort((a, b) => {
+                        if (a.isVerified && !b.isVerified) return -1;
+                        if (!a.isVerified && b.isVerified) return 1;
+                        return (b.itemCount || 0) - (a.itemCount || 0);
+                    });
+
                 setSellers(fetched);
             } catch (error) {
                 console.error("Error fetching sellers:", error);
@@ -55,51 +76,62 @@ export default function Sellers() {
                             whileInView={{ opacity: 1, scale: 1 }}
                             viewport={{ once: true }}
                             transition={{ delay: i * 0.05 }}
-                            className="bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 relative overflow-hidden group hover:border-blue-500/30 transition-all"
+                            className="h-full"
                         >
-                            <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Award className="text-blue-500" />
-                            </div>
-
-                            <div className="flex flex-col items-center">
-                                <div className="w-24 h-24 rounded-2xl overflow-hidden mb-4 ring-4 ring-white dark:ring-gray-800 group-hover:scale-105 transition-transform duration-500 shadow-xl">
-                                    <img
-                                        src={seller.photoURL || `https://ui-avatars.com/api/?name=${seller.displayName || 'User'}&background=random`}
-                                        alt={seller.displayName}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-
-                                <h3 className="font-bold text-lg mb-1">{seller.displayName || 'Anonymous User'}</h3>
-
-                                <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 mb-4">
-                                    <MapPin size={14} />
-                                    {seller.location || 'Local Seller'}
-                                </div>
-
-                                <div className="flex items-center gap-4 w-full bg-white dark:bg-gray-800 p-3 rounded-2xl">
-                                    <div className="flex-1 text-center border-r border-gray-100 dark:border-gray-700">
-                                        <div className="flex items-center justify-center gap-1 font-black text-yellow-500">
-                                            {seller.rating || 5.0} <Star size={12} fill="currentColor" />
+                            <div className={`bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 border transition-all relative group shadow-2xl shadow-black/5 h-full ${seller.isVerified ? 'border-blue-500/20 ring-1 ring-blue-500/5' : 'border-gray-100 dark:border-gray-800'}`}>
+                                <div className="flex flex-col items-center">
+                                    {/* Badge Overlay */}
+                                    {seller.isVerified && (
+                                        <div className="absolute top-6 right-6">
+                                            <div className="bg-blue-600 text-white p-1.5 rounded-xl shadow-lg shadow-blue-500/20">
+                                                <ShieldCheck size={16} />
+                                            </div>
                                         </div>
-                                        <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Rating</div>
-                                    </div>
-                                    <div className="flex-1 text-center">
-                                        <div className="font-black text-gray-900 dark:text-white">
-                                            {seller.sales || Math.floor(Math.random() * 50) + 1}
-                                        </div>
-                                        <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Sales</div>
-                                    </div>
-                                </div>
+                                    )}
 
-                                <button className="w-full mt-6 py-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold text-sm hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
-                                    View Profile
-                                </button>
+                                    <div className="w-24 h-24 md:w-28 md:h-28 rounded-[2rem] overflow-hidden mb-6 group-hover:scale-105 transition-transform duration-500 shadow-2xl relative">
+                                        {seller.photoURL ? (
+                                            <img src={seller.photoURL} alt={seller.displayName} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full bg-blue-600 flex items-center justify-center text-white text-3xl font-black">
+                                                {(seller.displayName || seller.email)?.[0].toUpperCase()}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="text-center space-y-1 mb-6">
+                                        <h3 className="font-black text-xl tracking-tight text-gray-900 dark:text-white flex items-center justify-center gap-2">
+                                            {seller.displayName || seller.email?.split('@')[0]}
+                                        </h3>
+                                        <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                            <MapPin size={12} className="text-blue-500" />
+                                            {seller.location || 'Local Seller'}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 w-full bg-gray-50 dark:bg-black/40 p-5 rounded-3xl border border-gray-100 dark:border-gray-800 backdrop-blur-sm">
+                                        <div className="text-center border-r border-gray-200 dark:border-gray-800">
+                                            <p className="text-lg font-black text-blue-600">{seller.itemCount || 0}</p>
+                                            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Listings</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-lg font-black text-gray-900 dark:text-white">{seller.isVerified ? 'Pro' : 'Std'}</p>
+                                            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Rank</p>
+                                        </div>
+                                    </div>
+
+                                    <Link
+                                        to="/" // In a real app, link to /store/sellerId
+                                        className="w-full mt-6 py-4 rounded-2xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-black text-xs uppercase tracking-widest text-center hover:scale-105 transition-all shadow-xl shadow-black/10"
+                                    >
+                                        Visit Store
+                                    </Link>
+                                </div>
                             </div>
                         </motion.div>
                     ))}
                 </div>
-            </section>
-        </div>
+            </section >
+        </div >
     );
 }

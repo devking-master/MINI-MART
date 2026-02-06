@@ -3,15 +3,18 @@ import { useAuth } from "../context/AuthContext";
 import { db } from "../firebase";
 import { doc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, User, ArrowRight, Loader, Eye, EyeOff } from "lucide-react";
-import { motion } from "framer-motion";
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, ShoppingBag, AlertCircle, ShieldCheck, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Input, Label } from "../components/animations/Input";
+import { AuroraBackground } from "../components/animations/AuroraBackground";
+import { Vortex } from "../components/animations/Vortex";
 
 export default function Register() {
     const emailRef = useRef();
-    const usernameRef = useRef(); // New ref for username
+    const usernameRef = useRef();
     const passwordRef = useRef();
     const passwordConfirmRef = useRef();
-    const { signup, updateUserProfile } = useAuth(); // Import updateUserProfile
+    const { signup, updateUserProfile } = useAuth();
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -43,14 +46,12 @@ export default function Register() {
 
             const userCredential = await signup(email, passwordRef.current.value);
 
-            // Save user to Firestore to reserve username
             await setDoc(doc(db, "users", userCredential.user.uid), {
                 username: username,
                 email: email,
                 createdAt: new Date()
             });
 
-            // Update profile with username
             await updateUserProfile({
                 displayName: username
             });
@@ -68,140 +69,189 @@ export default function Register() {
     }
 
     return (
-        <div className="min-h-screen flex bg-gray-50 dark:bg-gray-950 transition-colors duration-300 overflow-hidden">
-            {/* Visual Side */}
-            <motion.div
-                initial={{ x: -100, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.6 }}
-                className="hidden lg:flex lg:w-1/2 bg-gray-900 relative items-center justify-center p-12 text-white overflow-hidden"
-            >
-                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-blue-500 via-purple-500 to-gray-900 animate-pulse"></div>
-                <div className="z-10 relative max-w-lg">
-                    <h1 className="text-5xl font-extrabold mb-6 tracking-tight">Join Us.</h1>
-                    <p className="text-xl text-gray-300 leading-relaxed">
-                        Create your account today to start selling your items and discovering great deals in your neighborhood.
-                    </p>
-                </div>
-            </motion.div>
+        <div className="min-h-screen flex bg-[#050505] overflow-hidden selection:bg-blue-500/30">
+            {/* Left Side: High-Impact Visual */}
+            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center border-r border-white/5">
+                <Vortex className="opacity-40" />
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-transparent to-blue-600/10" />
 
-            {/* Form Side */}
-            <div className="flex-1 flex items-center justify-center p-4 lg:p-12 relative">
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    className="w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none p-8 border border-gray-100 dark:border-gray-800"
-                >
-                    <div className="text-center mb-10">
-                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Create Account</h2>
-                        <p className="text-gray-500 dark:text-gray-400">Get started for free.</p>
-                    </div>
-
-                    {error && (
-                        <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm font-medium mb-6 flex items-center gap-2 border border-red-100 dark:border-red-900/20"
-                        >
-                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                            {error}
-                        </motion.div>
-                    )}
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 ml-1">Username</label>
-                            <div className="relative">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                <input
-                                    ref={usernameRef}
-                                    type="text"
-                                    required
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-gray-900 dark:text-white"
-                                    placeholder="johndoe123"
-                                />
-                            </div>
+                <div className="z-10 text-center space-y-8 px-12">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="space-y-4"
+                    >
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+                            <Sparkles size={12} /> Join the Revolution
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 ml-1">Email</label>
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                <input
-                                    ref={emailRef}
-                                    type="email"
-                                    required
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-gray-900 dark:text-white"
-                                    placeholder="you@example.com"
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 ml-1">Password</label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                <input
-                                    ref={passwordRef}
-                                    type={showPassword ? "text" : "password"}
-                                    required
-                                    className="w-full pl-12 pr-12 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-gray-900 dark:text-white"
-                                    placeholder="Create a password"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
-                                >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 ml-1">Confirm Password</label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                <input
-                                    ref={passwordConfirmRef}
-                                    type={showConfirmPassword ? "text" : "password"}
-                                    required
-                                    className="w-full pl-12 pr-12 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-gray-900 dark:text-white"
-                                    placeholder="Repeat password"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
-                                >
-                                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="pt-2">
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 group"
-                            >
-                                {loading ? <Loader className="animate-spin" size={20} /> : (
-                                    <>
-                                        Get Started <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </form>
-
-                    <div className="mt-8 text-center">
-                        <p className="text-gray-500 dark:text-gray-400">
-                            Already have an account?{" "}
-                            <Link to="/login" className="font-bold text-blue-600 hover:text-blue-700 hover:underline">
-                                Log in
-                            </Link>
+                        <h1 className="text-6xl font-black text-white tracking-tighter leading-tight">
+                            Build Your <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-blue-500 italic">Financial Future.</span>
+                        </h1>
+                        <p className="text-gray-400 font-medium text-lg max-w-md mx-auto leading-relaxed">
+                            Join thousands of traders in a marketplace designed for speed, beauty, and absolute transparency.
                         </p>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="flex items-center justify-center gap-12 pt-12"
+                    >
+                        <div className="text-center">
+                            <p className="text-3xl font-black text-white">5k+</p>
+                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-1">Active Sellers</p>
+                        </div>
+                        <div className="w-px h-12 bg-white/10" />
+                        <div className="text-center">
+                            <p className="text-3xl font-black text-white">2.5s</p>
+                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-1">Listing Speed</p>
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
+
+            {/* Right Side: Form */}
+            <div className="flex-1 relative flex items-center justify-center p-6 lg:p-12 overflow-hidden">
+                <AuroraBackground className="opacity-30" />
+
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className="relative z-10 w-full max-w-[500px]"
+                >
+                    <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-[0_24px_80px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+                        <div className="space-y-8">
+                            {/* Header */}
+                            <div className="text-center md:text-left space-y-4">
+                                <motion.div
+                                    initial={{ y: -10, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    className="inline-flex lg:hidden items-center justify-center w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-2xl mb-4"
+                                >
+                                    <ShoppingBag size={28} />
+                                </motion.div>
+                                <div>
+                                    <h2 className="text-3xl md:text-4xl font-black text-white tracking-tighter leading-none mb-2">Create <span className="text-indigo-500 italic">Identity.</span></h2>
+                                    <p className="text-gray-400 font-medium text-sm">Join the elite marketplace network</p>
+                                </div>
+                            </div>
+
+                            <AnimatePresence mode="wait">
+                                {error && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400 text-[10px] font-black uppercase tracking-widest"
+                                    >
+                                        <AlertCircle size={18} /> {error}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            <form onSubmit={handleSubmit} className="space-y-5">
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Universal Username</Label>
+                                        <div className="relative group/field">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within/field:text-indigo-500 transition-colors z-10" size={18} />
+                                            <Input
+                                                ref={usernameRef}
+                                                type="text"
+                                                required
+                                                className="pl-12 pr-4 py-4 bg-white/5 border-transparent focus:border-indigo-500/50 rounded-2xl text-white font-bold placeholder:text-gray-700 transition-all shadow-inner"
+                                                placeholder="johndoe"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Communication/Email</Label>
+                                        <div className="relative group/field">
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within/field:text-indigo-500 transition-colors z-10" size={18} />
+                                            <Input
+                                                ref={emailRef}
+                                                type="email"
+                                                required
+                                                className="pl-12 pr-4 py-4 bg-white/5 border-transparent focus:border-indigo-500/50 rounded-2xl text-white font-bold placeholder:text-gray-700 transition-all shadow-inner"
+                                                placeholder="you@example.com"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Password</Label>
+                                            <div className="relative group/field">
+                                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within/field:text-indigo-500 transition-colors z-10" size={18} />
+                                                <Input
+                                                    ref={passwordRef}
+                                                    type={showPassword ? "text" : "password"}
+                                                    required
+                                                    className="pl-12 pr-12 py-4 bg-white/5 border-transparent focus:border-indigo-500/50 rounded-2xl text-white font-bold placeholder:text-gray-700 transition-all shadow-inner"
+                                                    placeholder="••••••"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors z-10"
+                                                >
+                                                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-1">Repeat</Label>
+                                            <div className="relative group/field">
+                                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within/field:text-indigo-500 transition-colors z-10" size={18} />
+                                                <Input
+                                                    ref={passwordConfirmRef}
+                                                    type={showConfirmPassword ? "text" : "password"}
+                                                    required
+                                                    className="pl-12 pr-12 py-4 bg-white/5 border-transparent focus:border-indigo-500/50 rounded-2xl text-white font-bold placeholder:text-gray-700 transition-all shadow-inner"
+                                                    placeholder="••••••"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors z-10"
+                                                >
+                                                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <motion.button
+                                    whileHover={{ y: -2, shadow: "0 20px 40px rgba(79,70,229,0.3)" }}
+                                    whileTap={{ scale: 0.98 }}
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full flex items-center justify-center gap-2 py-5 px-6 bg-white text-black hover:bg-indigo-600 hover:text-white rounded-[1.8rem] font-black text-xs uppercase tracking-[0.2em] transition-all shadow-2xl disabled:opacity-50 group/btn"
+                                >
+                                    {loading ? (
+                                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                    ) : (
+                                        <>Begin Journey <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform" /></>
+                                    )}
+                                </motion.button>
+
+                                <div className="text-center pt-4">
+                                    <p className="text-gray-500 font-bold text-[10px] uppercase tracking-widest">
+                                        HAV3 AN IDENTITY?{" "}
+                                        <Link to="/login" className="text-white hover:text-indigo-500 underline underline-offset-4 decoration-indigo-500/50 transition-colors">
+                                            Authorize Access
+                                        </Link>
+                                    </p>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </motion.div>
             </div>

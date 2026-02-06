@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, MessageSquare, PlusCircle, User, Moon, Sun, LogOut, Menu, X, Bell, LayoutGrid, Search, ArrowRight } from 'lucide-react';
+import { ShoppingBag, MessageSquare, PlusCircle, User, Moon, Sun, LogOut, Menu, X, Bell, LayoutGrid, ArrowRight } from 'lucide-react';
 import Footer from './Footer';
 
 export default function Layout({ children }) {
@@ -105,36 +105,18 @@ export default function Layout({ children }) {
         return unsubscribe;
     }, [currentUser, location.pathname]);
 
+    const adminEmails = ['oluwaseyioluwatobi77@gmail.com'];
+    const isAdmin = currentUser && adminEmails.includes(currentUser.email);
+
     const navItems = [
         { name: 'Browse', path: '/', icon: ShoppingBag },
         { name: 'Sell', path: '/create-listing', icon: PlusCircle },
         { name: 'Messages', path: '/chat', icon: MessageSquare },
         { name: 'Profile', path: '/profile', icon: User },
+        ...(isAdmin ? [{ name: 'Admin', path: '/admin', icon: LayoutGrid }] : []),
     ];
 
-    const [headerSearch, setHeaderSearch] = useState("");
-    const [headerResults, setHeaderResults] = useState([]);
-    const [allListings, setAllListings] = useState([]);
 
-    useEffect(() => {
-        if (location.pathname !== '/') return;
-        const q = query(collection(db, "listings"), orderBy("createdAt", "desc"));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            setAllListings(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        });
-        return unsubscribe;
-    }, [location.pathname]);
-
-    useEffect(() => {
-        if (!headerSearch) {
-            setHeaderResults([]);
-            return;
-        }
-        const filtered = allListings.filter(l =>
-            l.title?.toLowerCase().includes(headerSearch.toLowerCase())
-        );
-        setHeaderResults(filtered);
-    }, [headerSearch, allListings]);
 
     const isHome = location.pathname === '/';
 
@@ -206,72 +188,7 @@ export default function Layout({ children }) {
                             })}
                         </div>
 
-                        {/* Sticky Search Bar - Only shown on Home page */}
-                        {isHome && (
-                            <div className="relative">
-                                <div className={`relative transition-all duration-500 overflow-hidden ${scrolled ? 'w-[260px] opacity-100' : 'w-0 opacity-0'}`}>
-                                    <div className="relative flex items-center">
-                                        <Search className="absolute left-3.5 text-gray-400" size={14} />
-                                        <input
-                                            type="text"
-                                            placeholder="Search market..."
-                                            value={headerSearch}
-                                            onChange={(e) => setHeaderSearch(e.target.value)}
-                                            className="w-full pl-9 pr-4 py-2 bg-gray-100/50 dark:bg-gray-800/30 border border-gray-200/20 dark:border-gray-700/20 rounded-xl text-sm focus:outline-none focus:bg-white dark:focus:bg-gray-800 transition-all font-medium text-gray-900 dark:text-white"
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    navigate(`/?search=${headerSearch}`);
-                                                    setHeaderSearch("");
-                                                }
-                                            }}
-                                        />
-                                    </div>
-                                </div>
 
-                                {/* Header Suggestions Dropdown */}
-                                <AnimatePresence>
-                                    {headerSearch && scrolled && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                                            style={{ zIndex: 9999 }}
-                                            className={`absolute top-full left-0 right-0 mt-2 border rounded-2xl shadow-2xl overflow-hidden w-[320px] ${theme === 'dark' ? 'bg-[#121214] border-gray-800' : 'bg-white border-gray-100'
-                                                }`}
-                                        >
-                                            <div className="max-h-[300px] overflow-y-auto custom-scrollbar p-1.5 space-y-1">
-                                                {headerResults.length > 0 ? (
-                                                    headerResults.slice(0, 5).map(listing => (
-                                                        <Link
-                                                            key={listing.id}
-                                                            to={`/listing/${listing.id}`}
-                                                            onClick={() => setHeaderSearch("")}
-                                                            className={`w-full p-2 flex items-center gap-3 rounded-xl transition-all duration-200 group ${theme === 'dark' ? 'hover:bg-gray-800/50' : 'hover:bg-blue-50'
-                                                                }`}
-                                                        >
-                                                            <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-gray-100 dark:border-white/5">
-                                                                <img src={listing.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className={`font-bold text-[12px] truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{listing.title}</p>
-                                                                <p className="text-[10px] text-blue-600 dark:text-blue-400 font-black">₦{listing.price.toLocaleString()}</p>
-                                                            </div>
-                                                            <div className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 opacity-0 group-hover:opacity-100 transition-all">
-                                                                <ArrowRight size={10} className="text-blue-500" />
-                                                            </div>
-                                                        </Link>
-                                                    ))
-                                                ) : (
-                                                    <div className="py-6 px-4 text-center">
-                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">No instant matches</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        )}
                     </div>
 
                     {/* Right Section: Theme + Profile + Logout */}

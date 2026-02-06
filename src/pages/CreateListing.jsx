@@ -4,11 +4,13 @@ import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import ImageUpload from '../components/ImageUpload';
+import { FileUpload } from '../components/animations/FileUpload';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap, LayersControl, Circle, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { motion } from 'framer-motion';
 import { DollarSign, Tag, Image as ImageIcon, MapPin, AlignLeft, Type, Loader, Crosshair, ArrowRight, UploadCloud, AlertCircle } from 'lucide-react';
+import { Input, Label, Textarea, Select } from "../components/animations/Input";
 import emailjs from '@emailjs/browser';
 
 // Fix Leaflet marker icon issue
@@ -247,14 +249,14 @@ export default function CreateListing() {
                             >
                                 <div className="space-y-6">
                                     <div className="relative group">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Title</label>
-                                        <div className="relative">
-                                            <Type className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={20} />
-                                            <input
+                                        <Label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Title</Label>
+                                        <div className="relative group">
+                                            <Type className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors z-10" size={20} />
+                                            <Input
                                                 type="text"
                                                 name="title"
                                                 required
-                                                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-black/40 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-bold text-lg text-gray-900 dark:text-white placeholder:font-normal placeholder:text-gray-400"
+                                                className="pl-12 pr-4 py-4 bg-gray-50 dark:bg-black/40 border-gray-200 dark:border-gray-800 rounded-xl focus:ring-blue-500/50 focus:border-blue-500 font-bold text-lg text-gray-900 dark:text-white placeholder:font-normal placeholder:text-gray-400"
                                                 placeholder="e.g. vintage camera lens"
                                                 value={formData.title}
                                                 onChange={handleChange}
@@ -263,48 +265,48 @@ export default function CreateListing() {
                                     </div>
 
                                     <div className="relative group">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Description</label>
-                                        <div className="relative">
-                                            <AlignLeft className="absolute left-4 top-6 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={20} />
-                                            <textarea
+                                        <Label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Description</Label>
+                                        <div className="relative group">
+                                            <AlignLeft className="absolute left-4 top-6 text-gray-400 group-focus-within:text-blue-500 transition-colors z-10" size={20} />
+                                            <Textarea
                                                 name="description"
                                                 required
-                                                rows="5"
-                                                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-black/40 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-medium text-gray-900 dark:text-white resize-none placeholder:font-normal placeholder:text-gray-400"
+                                                rows={5}
+                                                className="pl-12 pr-4 py-4 bg-gray-50 dark:bg-black/40 border-gray-200 dark:border-gray-800 rounded-xl focus:ring-blue-500/50 focus:border-blue-500 font-medium text-gray-900 dark:text-white placeholder:font-normal placeholder:text-gray-400 min-h-[120px]"
                                                 placeholder="Tell buyers what makes your item special..."
                                                 value={formData.description}
                                                 onChange={handleChange}
-                                            ></textarea>
+                                            />
                                         </div>
                                     </div>
 
                                     <div className="relative group">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Item Condition & Defects (Optional)</label>
-                                        <div className="relative">
-                                            <AlertCircle className="absolute left-4 top-4 text-gray-400 group-focus-within:text-amber-500 transition-colors" size={20} />
-                                            <textarea
+                                        <Label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Item Condition & Defects (Optional)</Label>
+                                        <div className="relative group">
+                                            <AlertCircle className="absolute left-4 top-4 text-gray-400 group-focus-within:text-amber-500 transition-colors z-10" size={20} />
+                                            <Textarea
                                                 name="defects"
-                                                rows="3"
-                                                className="w-full pl-12 pr-4 py-4 bg-amber-50/5 dark:bg-amber-900/5 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all font-medium text-gray-900 dark:text-white resize-none placeholder:font-normal placeholder:text-gray-400"
+                                                rows={3}
+                                                className="pl-12 pr-4 py-4 bg-amber-50/5 dark:bg-amber-900/5 border-gray-200 dark:border-gray-800 rounded-xl focus:ring-amber-500/50 focus:border-amber-500 font-medium text-gray-900 dark:text-white placeholder:font-normal placeholder:text-gray-400 min-h-[80px]"
                                                 placeholder="List any scratches, broken parts, or issues here to inform buyers..."
                                                 value={formData.defects}
                                                 onChange={handleChange}
-                                            ></textarea>
+                                            />
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-6">
                                         <div className="relative group">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Price</label>
-                                            <div className="relative">
-                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors font-black text-lg">₦</div>
-                                                <input
+                                            <Label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Price</Label>
+                                            <div className="relative group">
+                                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-green-500 transition-colors font-black text-lg z-10">₦</div>
+                                                <Input
                                                     type="number"
                                                     name="price"
                                                     required
                                                     min="0"
                                                     step="0.01"
-                                                    className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-black/40 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all font-bold text-lg text-gray-900 dark:text-white placeholder:font-normal placeholder:text-gray-400"
+                                                    className="pl-12 pr-4 py-4 bg-gray-50 dark:bg-black/40 border-gray-200 dark:border-gray-800 rounded-xl focus:ring-green-500/50 focus:border-green-500 font-bold text-lg text-gray-900 dark:text-white placeholder:font-normal placeholder:text-gray-400"
                                                     placeholder="0.00"
                                                     value={formData.price}
                                                     onChange={handleChange}
@@ -313,20 +315,20 @@ export default function CreateListing() {
                                         </div>
 
                                         <div className="relative group">
-                                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Category</label>
-                                            <div className="relative">
-                                                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={20} />
-                                                <select
+                                            <Label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block ml-1">Category</Label>
+                                            <div className="relative group">
+                                                <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors z-10" size={20} />
+                                                <Select
                                                     name="category"
-                                                    className="w-full pl-12 pr-10 py-4 bg-gray-50 dark:bg-black/40 border border-gray-200 dark:border-gray-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-bold text-gray-900 dark:text-white appearance-none cursor-pointer"
+                                                    className="pl-12 pr-10 py-4 bg-gray-50 dark:bg-black/40 border-gray-200 dark:border-gray-800 rounded-xl focus:ring-blue-500/50 focus:border-blue-500 font-bold text-gray-900 dark:text-white h-auto"
                                                     value={formData.category}
                                                     onChange={handleChange}
                                                 >
                                                     {["General", "Electronics", "Furniture", "Clothing", "Vehicles", "Books", "Services", "Other"].map(opt => (
                                                         <option key={opt} value={opt} className="bg-white dark:bg-gray-900">{opt}</option>
                                                     ))}
-                                                </select>
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                </Select>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
                                                     <ArrowRight className="rotate-90 text-gray-400" size={16} />
                                                 </div>
                                             </div>
@@ -350,7 +352,9 @@ export default function CreateListing() {
                                         <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Add at least 3 photos (Cover first)</p>
                                     </div>
                                 </div>
-                                <ImageUpload onUploadComplete={setImageUrls} />
+                                <div className="w-full mx-auto min-h-96 border border-dashed bg-white dark:bg-black border-neutral-200 dark:border-neutral-800 rounded-3xl">
+                                    <FileUpload onUploadComplete={setImageUrls} />
+                                </div>
                             </motion.div>
                         </div>
 
@@ -438,9 +442,9 @@ export default function CreateListing() {
                             </motion.button>
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
+                </form >
+            </div >
+        </div >
 
     );
 }

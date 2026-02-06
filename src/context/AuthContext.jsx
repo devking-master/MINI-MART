@@ -8,7 +8,8 @@ import {
     sendPasswordResetEmail
 } from "firebase/auth";
 import { auth, db } from "../firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
+import GlobalLoader from "../components/GlobalLoader";
 
 const AuthContext = createContext();
 
@@ -42,12 +43,15 @@ export function AuthProvider({ children }) {
     }
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            setCurrentUser(user);
-            setLoading(false);
+        let unsubscribeProfile = null;
 
+        const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Presence Heartbeat
+                // Set immediately to prevent PrivateRoute from redirecting back to login
+                // while we wait for the Firestore profile to sync.
+                setCurrentUser(user);
+
+                // 1. Initial Heartbeat/Presence Update
                 const userRef = doc(db, "users", user.uid);
                 await setDoc(userRef, {
                     email: user.email,
@@ -56,10 +60,34 @@ export function AuthProvider({ children }) {
                     lastSeen: serverTimestamp(),
                     isOnline: true
                 }, { merge: true });
+
+                // 2. Real-time Profile Listener
+                unsubscribeProfile = onSnapshot(userRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const userData = snapshot.data();
+                        // Merge auth user with firestore data
+                        setCurrentUser({
+                            ...user,
+                            ...userData,
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: userData.displayName || user.displayName || user.email.split('@')[0],
+                            photoURL: userData.photoURL || user.photoURL
+                        });
+                    }
+                    setLoading(false);
+                });
+            } else {
+                setCurrentUser(null);
+                setLoading(false);
+                if (unsubscribeProfile) unsubscribeProfile();
             }
         });
 
-        return unsubscribe;
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeProfile) unsubscribeProfile();
+        };
     }, []);
 
     // Periodic Heartbeat
@@ -91,7 +119,7 @@ export function AuthProvider({ children }) {
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {loading ? <GlobalLoader loading={loading} /> : children}
         </AuthContext.Provider>
     );
 }
